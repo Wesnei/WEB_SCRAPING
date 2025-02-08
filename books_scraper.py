@@ -2,10 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
-# Criar uma sessão para reutilizar conexões e melhorar o desempenho
 session = requests.Session()
 
-# Função para obter o número total de páginas em uma categoria
 def get_total_pages(category_url):
     response = session.get(category_url)
     response.encoding = "utf-8"
@@ -19,9 +17,8 @@ def get_total_pages(category_url):
             if last_page:
                 return int(last_page.text.strip().split()[-1])
     
-    return 1  # Se não houver paginação, retorna 1
+    return 1  
 
-# Função para extrair dados de livros de uma página
 def scrape_books(page_url):
     book_list = []
     try:
@@ -35,7 +32,7 @@ def scrape_books(page_url):
             for book in books:
                 title = book.h3.a.attrs["title"]
                 price_text = book.find("p", class_="price_color").text
-                price = float(price_text.replace("£", "").strip())  # Convertendo para float
+                price = float(price_text.replace("£", "").strip()) 
                 rating = book.p.attrs["class"][1]
                 book_list.append([title, price, rating])
     
@@ -44,7 +41,6 @@ def scrape_books(page_url):
     
     return book_list
 
-# Função para extrair dados de livros com categorias
 def scrape_books_with_category(base_url):
     book_list = []
     try:
@@ -53,7 +49,7 @@ def scrape_books_with_category(base_url):
         
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, "html.parser")
-            categories = soup.find("ul", class_="nav nav-list").find_all("a")[1:]  # Ignorar "Books"
+            categories = soup.find("ul", class_="nav nav-list").find_all("a")[1:]  
             
             for category in categories:
                 category_name = category.text.strip()
@@ -72,13 +68,10 @@ def scrape_books_with_category(base_url):
     
     return book_list
 
-# URL base
 domain = "https://books.toscrape.com"
 books_data = scrape_books_with_category(domain)
 
-# Criar um DataFrame
 df = pd.DataFrame(books_data, columns=["Título", "Preço (£)", "Classificação", "Categoria"])
 
-# Salvar os dados em um arquivo CSV
 df.to_csv("books_with_categories.csv", index=False, encoding="utf-8")
 print("✅ Dados extraídos com sucesso!")
